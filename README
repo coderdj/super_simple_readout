@@ -1,0 +1,10 @@
+To run:
+
+make
+./main -l 0 -c 0
+
+Assuming you have a PCI card optically connected (port 0) to a single V1724.
+The first number is the PCI card link number (some only have one port).
+The second number is the 'crate' number (CAEN lingo), which can be used to
+differentiate multiple V1724 set up in daisy chain. With one board it's 0.
+
