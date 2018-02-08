@@ -8,3 +8,5 @@ The first number is the PCI card link number (some only have one port).
 The second number is the 'crate' number (CAEN lingo), which can be used to
 differentiate multiple V1724 set up in daisy chain. With one board it's 0.
 
+
+For root stuff you have to source your 'thisroot.sh' before compiling.

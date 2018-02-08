@@ -2,8 +2,8 @@
 # requires CAENVMElib
 
 CC	= g++
-CFLAGS	= -Wall -g -DLINUX -fPIC -std=c++11
-LDFLAGS = -lCAENVME
+CFLAGS	= -Wall -g -DLINUX -fPIC -std=c++11 $(shell root-config --cflags)
+LDFLAGS = -lCAENVME $(shell root-config --libs) $(shell root-config --glibs)
 SOURCES = $(shell echo ./*cc)
 OBJECTS = $(SOURCES: .cc=.o)
 CPP	= main
