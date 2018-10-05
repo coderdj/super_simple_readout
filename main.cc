@@ -11,6 +11,7 @@
 // if using optical link. Otherwise you need
 // the board VME base address.
 #define gBOARD_VME    0x80000000
+#define gLOOP         true
 
 using namespace std;
 
@@ -92,34 +93,48 @@ int main(int argc, char *argv[], char *envp[]){
   // Start the board and wait
   WriteRegister(0x8100, 0x4, handle);
   usleep(1000);
-  
-  // Read some data from the digitizer and print it
-  unsigned int blt_bytes=0, buff_size=10000, blt_size=524288;
-  int nb=0,ret=-5;
-  u_int32_t *buff = new u_int32_t[buff_size]; //too large is OK
+  u_int64_t dat = 0;
+  u_int32_t counter = 0;
   do{
-    // read manual
-    ret = CAENVME_FIFOBLTReadCycle(handle,gBOARD_VME,
-				   ((unsigned char*)buff)+blt_bytes,
-				   blt_size,cvA32_U_BLT,cvD32,&nb);
-    if((ret!=cvSuccess) && (ret!=cvBusError)){
-      cout<<"Board read error: "<<ret<<" for board "<<handle<<endl;
-      delete[] buff;
-      return -1;
-    }
-    blt_bytes+=nb;
-    if(blt_bytes>buff_size)   {
-      cout<<"Buffer size too small for read!"<<endl;
-      delete[] buff;
-      return -1;
-    }
-  }while(ret!=cvBusError);
+    
+    // Read some data from the digitizer and print it
+    unsigned int blt_bytes=0, buff_size=8*8388608, blt_size=8*8388608;
+    int nb=0,ret=-5;
+    u_int32_t *buff = new u_int32_t[buff_size]; //too large is OK
+    do{
+      // read manual
+      ret = CAENVME_FIFOBLTReadCycle(handle,gBOARD_VME,
+				     ((unsigned char*)buff)+blt_bytes,
+				     blt_size,cvA32_U_BLT,cvD32,&nb);
+      if((ret!=cvSuccess) && (ret!=cvBusError)){
+	cout<<"Board read error: "<<ret<<" for board "<<handle<<endl;
+	delete[] buff;
+	return -1;
+      }
+      blt_bytes+=nb;
+      if(blt_bytes>buff_size)   {
+	cout<<"Buffer size too small for read!"<<endl;
+	delete[] buff;
+	return -1;
+      }
+    }while(ret!=cvBusError);
 
-  // Print the data to console. See manual for format.
-  cout<<"Here's your data dump: "<<endl;
-  for(unsigned int i=0; i<blt_bytes/4; i+=1)
-    cout<<hex<<buff[i]<<endl;
+    // Print the data to console. See manual for format.
+    if(!gLOOP){
+      cout<<"Here's your data dump: "<<endl;
+      for(unsigned int i=0; i<blt_bytes/4; i+=1)
+	cout<<hex<<buff[i]<<endl;
+    }
 
+    dat += blt_bytes;
+    counter++;
+    if(counter%1000==0){
+      cout<<"Read out "<<dat/1e6<<" MB data"<<std::endl;
+      dat = 0;
+    }
+    
+    delete[] buff;
+  }while(gLOOP);
   // Bonus points:
   // 1) Plot data
   // 2) Make auto-updating plot (like oscilloscope) for one channel
